@@ -1,0 +1,119 @@
+Assignment 5
+Implement token ring based mutual exclusion algorithm.
+TokenRingMain.java
+public class TokenRingMain {
+public static void main(String[] args) {
+// Create a TokenRing with 5 processes
+TokenRing tokenRing = new TokenRing(5);
+tokenRing.startRing();
+}
+}
+Process.java
+class Process implements Runnable {
+private int id;
+private TokenRing tokenRing;
+public Process(int id, TokenRing tokenRing) {
+this.id = id;
+this.tokenRing = tokenRing; // Assign the tokenRing instance
+}
+public int getId() {
+return id;
+}
+@Override
+public void run() {
+while (true) {
+try {
+// Wait for the token
+if (id == tokenRing.getCurrentProcessWithToken().getId()) {
+enterCriticalSection();
+passTokenToNextProcess();
+}
+Thread.sleep(500); // Simulate waiting time
+} catch (InterruptedException e) {
+e.printStackTrace();
+}}
+}
+public void enterCriticalSection() {
+System.out.println("Process " + id + " entered critical section.");
+try {
+Thread.sleep(2000); // Simulate work in critical section
+} catch (InterruptedException e) {
+e.printStackTrace();
+}
+System.out.println("Process " + id + " left critical section.");
+}
+public void passTokenToNextProcess() {
+int nextIndex = tokenRing.getNextProcessIndex(id);
+tokenRing.passToken(id, nextIndex);
+}
+}
+TokenRing.java
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+class TokenRing {
+private List<Process> processes;
+private int currentTokenHolderIndex;
+private final Lock lock = new ReentrantLock();
+public TokenRing(int numProcesses) {
+processes = new ArrayList<>();currentTokenHolderIndex = 0; // First process holds the token
+initially
+for (int i = 0; i < numProcesses; i++) {
+// Pass the tokenRing instance to each Process when created
+processes.add(new Process(i, this));
+}
+}
+public void startRing() {
+// Start the processes
+for (Process process : processes) {
+new Thread(process).start();
+}
+}
+public void passToken(int fromIndex, int toIndex) {
+lock.lock();
+try {
+System.out.println("Process " +
+processes.get(fromIndex).getId() + " passes the token to Process " +
+processes.get(toIndex).getId());
+currentTokenHolderIndex = toIndex;
+} finally {
+lock.unlock();
+}
+}
+public Process getCurrentProcessWithToken() {
+return processes.get(currentTokenHolderIndex);
+}
+public int getNextProcessIndex(int currentIndex) {return (currentIndex + 1) % processes.size();
+}
+}
+Output:
+PS E:\DS PR zip\TokenRing> javac TokenRing.java
+TokenRingMain.java
+>>
+PS E:\DS PR zip\TokenRing> java TokenRingMain
+>>
+Process 0 entered critical section.
+Process 0 left critical section.
+Process 0 passes the token to Process 1
+Process 1 entered critical section.
+Process 1 left critical section.
+Process 1 passes the token to Process 2
+Process 2 entered critical section.
+Process 2 left critical section.
+Process 2 passes the token to Process 3
+Process 3 entered critical section.
+Process 3 left critical section.
+Process 3 passes the token to Process 4
+Process 4 entered critical section.
+Process 4 left critical section.
+Process 4 passes the token to Process 0
+Process 0 entered critical section.
+Process 0 left critical section.
+Process 0 passes the token to Process 1
+Process 1 entered critical section.
+Process 1 left critical section.
+Process 1 passes the token to Process 2Process 2 entered critical section.
+Process 2 left critical section.
+Process 2 passes the token to Process 3
+Process 3 entered critical section.
+PS E:\DS PR zip\TokenRing>
