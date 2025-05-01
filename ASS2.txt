@@ -1,0 +1,138 @@
+ASS 2
+ReverseServer.java
+import ReverseModule.Reverse; import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*; import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+class ReverseServer
+
+
+
+{
+public static void main(String[] args)
+{
+try
+{
+// initialize the ORB
+org.omg.CORBA.ORB orb=org.omg.CORBA.ORB.init(args,null);
+// initialize the BOA/POA
+POA rootPOA= POAHelper.narrow(orb.resolve_initial_references("RootPOA"
+));
+rootPOA.the_POAManager().activate();
+// creating the calculator object ReverseImpl rvr = new ReverseImpl();
+// get the object reference from the servant class org.omg.CORBA.Object
+ref=rootPOA.servant_to_reference(rvr);
+System.out.println("Step1");
+Reverse h_ref = ReverseModule.ReverseHelper.narrow(ref);
+System.out.println("Step2");
+org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+System.out.println("Step3");
+NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+System.out.println("Step4");
+String name = "Reverse";
+NameComponent path[] = ncRef.to_name(name); ncRef.rebind(path,h_ref);
+System.out.println("Reverse Server reading and waiting...");
+orb.run();
+}
+catch(Exception e)
+{
+e.printStackTrace();
+}
+}
+}
+
+ReverseClient.java
+import ReverseModule.*; import org.omg.CosNaming.*;
+import org.omg.CosNaming.NamingContextPackage.*; import org.omg.CORBA.*;
+import java.io.*;
+class ReverseClient
+{
+public static void main(String args[])
+{
+Reverse ReverseImpl=null;
+try
+{
+// initialize the ORB
+org.omg.CORBA.ORB orb = org.omg.CORBA.ORB.init(args,null);
+org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+String name = "Reverse"; ReverseImpl =
+ReverseHelper.narrow(ncRef.resolve_str(name));
+System.out.println("Enter String=");
+BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+String str= br.readLine();
+String tempStr= ReverseImpl.reverse_string(str); System.out.println(tempStr);
+}
+catch(Exception e)
+
+
+
+{
+e.printStackTrace();
+}
+}
+}
+
+ReverseImpl.java
+import ReverseModule.ReversePOA; import java.lang.String;
+class ReverseImpl extends ReversePOA
+{
+ReverseImpl()
+{
+super();
+System.out.println("Reverse Object Created");
+}
+public String reverse_string(String name)
+{
+StringBuffer str=new StringBuffer(name); str.reverse();
+return (("Server Send "+str));
+}
+}
+ReverseModule.idl
+module ReverseModule
+{
+interface Reverse
+{
+string reverse_string(in string str);
+};
+};
+
+
+
+
+
+
+
+Commands:
+server site:
+dell@dell-Vostro-3546:~$ cd Desktop dell@dell-Vostro-3546:~/Desktop$ cd
+ass3
+dell@dell-Vostro-3546:~/Desktop/ass3$ idlj -fall
+ReverseModule.idldell@dell-Vostro-3546:~/Desktop/ass3$ javac
+*.java ReverseModule/*.javaNote: ReverseModule/ReversePOA.java uses
+unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+dell@dell-Vostro-3546:~/Desktop/ass3$ orbd -ORBInitialPort 1050&[1] 5163
+dell@dell-Vostro-3546:~/Desktop/ass3$ java ReverseServer -
+ORBInitialPort 1050& -ORBInitialHost localhost& [1] 4933
+[2] 4934
+dell@dell-Vostro-3546:~/Desktop/ass3$ -ORBInitialHost: command not found
+
+Reverse Object Created
+Step1
+Step2
+Step3
+Step4
+Reverse Server reading and waiting....
+
+
+clent site:
+dell@dell-Vostro-3546:~$ cd Desktop dell@dell-Vostro-3546:~/Desktop$ cd
+ass3
+dell@dell-Vostro-3546:~/Desktop/ass3$ java ReverseClient - ORBInitialPort
+1050 -ORBInitialHost localhost
+
+Enter String=
+hi, corba practical done by pallavi.
+
+Server Send .ivallap yb enod lacitcarp abroc ,ih dell@dell-Vostro-
+3546:~/Desktop/ass3$
